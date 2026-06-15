@@ -58,7 +58,7 @@ Return JSON with these fields:
     } catch (err) {
       const status = (err as { status?: number; statusCode?: number })?.status ?? (err as { statusCode?: number })?.statusCode;
       if (status === 429) throw new Error("Rate limited. Please try again shortly.");
-      if (status === 402) throw new Error("AI credits exhausted. Add credits in your Lovable workspace billing.");
+      if (status === 402) throw new Error("AI credits exhausted. Add credits in your OpenRouter account.");
       throw err;
     }
   });
