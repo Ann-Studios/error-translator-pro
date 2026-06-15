@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { generateObject } from "ai";
 import { z } from "zod";
 
-import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+import { createAiProvider } from "./ai-gateway.server";
 
 const InputSchema = z.object({
   errorText: z.string().min(3).max(8000),
@@ -27,14 +27,14 @@ const ResultSchema = z.object({
 export const translateError = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }) => {
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
+    const key = process.env.OPENROUTER_API_KEY;
+    if (!key) throw new Error("Missing OPENROUTER_API_KEY");
 
-    const gateway = createLovableAiGatewayProvider(key);
+    const gateway = createAiProvider(key);
 
     try {
       const { object } = await generateObject({
-        model: gateway("google/gemini-3-flash-preview"),
+        model: gateway("google/gemini-2.5-flash"),
         schema: ResultSchema,
         system:
           "You are an expert developer who translates programming errors into clear, actionable guidance. Be concrete and pragmatic. Avoid generic filler. Tailor fixes to the actual error and stack trace, citing exact identifiers when shown. Always respond with valid JSON matching the requested schema exactly.",
