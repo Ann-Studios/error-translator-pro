@@ -34,7 +34,7 @@ export const translateError = createServerFn({ method: "POST" })
 
     try {
       const { object } = await generateObject({
-        model: gateway("google/gemini-2.5-flash"),
+        model: gateway("gemini-2.5-flash"),
         schema: ResultSchema,
         system:
           "You are an expert developer who translates programming errors into clear, actionable guidance. Be concrete and pragmatic. Avoid generic filler. Tailor fixes to the actual error and stack trace, citing exact identifiers when shown. Always respond with valid JSON matching the requested schema exactly.",
