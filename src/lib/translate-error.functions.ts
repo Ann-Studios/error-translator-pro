@@ -56,9 +56,12 @@ Return JSON with these fields:
 
       return object;
     } catch (err) {
-      const status = (err as { status?: number; statusCode?: number })?.status ?? (err as { statusCode?: number })?.statusCode;
+      const status =
+        (err as { status?: number; statusCode?: number })?.status ??
+        (err as { statusCode?: number })?.statusCode;
       if (status === 429) throw new Error("Rate limited. Please try again shortly.");
-      if (status === 402) throw new Error("AI credits exhausted. Add credits in your Gemini account.");
+      if (status === 402)
+        throw new Error("AI credits exhausted. Add credits in your Gemini account.");
       throw err;
     }
   });
