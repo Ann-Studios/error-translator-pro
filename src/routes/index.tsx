@@ -1,24 +1,23 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import {
   AlertCircle,
   Sparkles,
-  Copy,
-  Check,
-  Search,
-  Wrench,
-  Lightbulb,
   Loader2,
-  Terminal,
-  ChevronRight,
+  Bookmark,
+  ArrowRight,
 } from "lucide-react";
+import { toast } from "sonner";
 
+import { AppHeader } from "@/components/app-header";
+import { ResultView, type TranslationResult } from "@/components/result-view";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { translateError } from "@/lib/translate-error.functions";
-import { cn } from "@/lib/utils";
+import { saveTranslation } from "@/lib/translations.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -60,63 +59,60 @@ KeyError: 'users'`,
   },
 ];
 
-type Result = Awaited<ReturnType<typeof translateError>>;
-
 function Index() {
   const translate = useServerFn(translateError);
+  const save = useServerFn(saveTranslation);
+  const qc = useQueryClient();
+  const navigate = useNavigate();
   const [text, setText] = useState("");
   const [language, setLanguage] = useState("");
-  const [copied, setCopied] = useState<string | null>(null);
+  const [isAuthed, setIsAuthed] = useState(false);
+  const [savedId, setSavedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setIsAuthed(!!data.session));
+    const { data } = supabase.auth.onAuthStateChange((_e, s) => setIsAuthed(!!s));
+    return () => data.subscription.unsubscribe();
+  }, []);
 
   const mutation = useMutation({
-    mutationFn: (input: { errorText: string; language?: string }) =>
-      translate({ data: input }),
+    mutationFn: async (input: { errorText: string; language?: string }) => {
+      const result = (await translate({ data: input })) as TranslationResult;
+      let id: string | null = null;
+      if (isAuthed) {
+        try {
+          const saved = await save({
+            data: {
+              errorText: input.errorText,
+              language: input.language,
+              title: result.title,
+              result: result as unknown as Record<string, unknown>,
+            },
+          });
+          id = saved.id;
+          qc.invalidateQueries({ queryKey: ["translations"] });
+          toast.success("Saved to your history");
+        } catch (e) {
+          console.error("Save failed", e);
+        }
+      }
+      return { result, id };
+    },
   });
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (text.trim().length < 3) return;
-    mutation.mutate({
-      errorText: text.trim(),
-      language: language.trim() || undefined,
-    });
+    setSavedId(null);
+    mutation.mutate(
+      { errorText: text.trim(), language: language.trim() || undefined },
+      { onSuccess: ({ id }) => setSavedId(id) },
+    );
   };
-
-  const copy = async (key: string, value: string) => {
-    await navigator.clipboard.writeText(value);
-    setCopied(key);
-    setTimeout(() => setCopied(null), 1500);
-  };
-
-  const result: Result | undefined = mutation.data;
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-border/60 backdrop-blur-sm sticky top-0 z-10 bg-background/70">
-        <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="size-9 rounded-lg bg-primary/15 grid place-items-center border border-primary/30">
-              <Terminal className="size-4 text-primary" />
-            </div>
-            <div>
-              <div className="font-mono text-sm font-semibold tracking-tight">
-                error<span className="text-primary">.translate</span>()
-              </div>
-              <div className="text-[11px] text-muted-foreground -mt-0.5">
-                stack traces → plain English
-              </div>
-            </div>
-          </div>
-          <a
-            href="https://github.com"
-            target="_blank"
-            rel="noreferrer"
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors hidden sm:inline-flex items-center gap-1"
-          >
-            Open source soon <ChevronRight className="size-3" />
-          </a>
-        </div>
-      </header>
+      <AppHeader />
 
       <main className="mx-auto max-w-6xl px-6 py-10 sm:py-16">
         <section className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
@@ -125,12 +121,27 @@ function Index() {
             AI-powered error analysis
           </div>
           <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight leading-[1.05]">
-            Make any error{" "}
-            <span className="text-gradient">make sense</span>.
+            Make any error <span className="text-gradient">make sense</span>.
           </h1>
           <p className="mt-5 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
             Paste a stack trace, compiler error, or cryptic log line. Get a plain-English
             breakdown, likely causes, concrete fixes, and curated searches.
+            {isAuthed ? (
+              <span className="block mt-1.5 text-success text-sm">
+                <Bookmark className="inline size-3.5 mr-1" />
+                Every translation is auto-saved to your history.
+              </span>
+            ) : (
+              <span className="block mt-1.5 text-sm">
+                <button
+                  onClick={() => navigate({ to: "/auth" })}
+                  className="text-accent hover:underline font-medium"
+                >
+                  Sign in
+                </button>{" "}
+                to save translations and revisit them later.
+              </span>
+            )}
           </p>
         </section>
 
@@ -172,11 +183,7 @@ function Index() {
                   </button>
                 ))}
               </div>
-              <Button
-                type="submit"
-                disabled={mutation.isPending || text.trim().length < 3}
-                className="font-medium"
-              >
+              <Button type="submit" disabled={mutation.isPending || text.trim().length < 3}>
                 {mutation.isPending ? (
                   <>
                     <Loader2 className="animate-spin" />
@@ -194,7 +201,7 @@ function Index() {
         </form>
 
         {mutation.isError && (
-          <div className="mt-6 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive-foreground flex gap-3">
+          <div className="mt-6 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm flex gap-3">
             <AlertCircle className="size-5 flex-shrink-0 text-destructive" />
             <div>
               <div className="font-medium text-destructive">Couldn't analyze</div>
@@ -221,126 +228,24 @@ function Index() {
           </div>
         )}
 
-        {result && !mutation.isPending && (
-          <div className="mt-10 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Summary */}
-            <section className="rounded-2xl border border-border bg-card p-6 glow-border">
-              <div className="flex items-start justify-between gap-4 flex-wrap">
-                <div>
-                  <div className="text-xs font-mono text-accent uppercase tracking-wider mb-1.5">
-                    {result.likelyLanguage}
-                  </div>
-                  <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">
-                    {result.title}
-                  </h2>
-                </div>
+        {mutation.data && !mutation.isPending && (
+          <div className="mt-10">
+            {savedId && (
+              <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-success/30 bg-success/10 px-4 py-2.5 text-sm">
+                <span className="flex items-center gap-2 text-success">
+                  <Bookmark className="size-4" /> Saved to your history
+                </span>
                 <Button
-                  variant="ghost"
                   size="sm"
-                  onClick={() => copy("summary", result.plainEnglish)}
-                  className="text-muted-foreground"
+                  variant="ghost"
+                  onClick={() => navigate({ to: "/history" })}
+                  className="text-success hover:text-success"
                 >
-                  {copied === "summary" ? <Check /> : <Copy />}
-                  {copied === "summary" ? "Copied" : "Copy"}
+                  View history <ArrowRight className="size-3" />
                 </Button>
               </div>
-              <p className="mt-4 text-foreground/90 leading-relaxed">
-                {result.plainEnglish}
-              </p>
-            </section>
-
-            <div className="grid lg:grid-cols-2 gap-6">
-              {/* Causes */}
-              <Section
-                icon={<Lightbulb className="size-4" />}
-                title="Common causes"
-                accent="warning"
-              >
-                <ul className="space-y-2.5">
-                  {result.causes.map((c, i) => (
-                    <li key={i} className="flex gap-3 text-sm">
-                      <span className="font-mono text-xs text-warning mt-0.5 flex-shrink-0">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <span className="text-foreground/85 leading-relaxed">{c}</span>
-                    </li>
-                  ))}
-                </ul>
-              </Section>
-
-              {/* Searches */}
-              <Section
-                icon={<Search className="size-4" />}
-                title="Related discussions"
-                accent="accent"
-              >
-                <ul className="space-y-2">
-                  {result.searchQueries.map((q, i) => (
-                    <li key={i} className="grid grid-cols-[1fr_auto_auto] gap-2 items-center">
-                      <span className="font-mono text-xs text-foreground/80 truncate">
-                        {q}
-                      </span>
-                      <a
-                        href={`https://stackoverflow.com/search?q=${encodeURIComponent(q)}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-[11px] font-medium px-2 py-1 rounded-md bg-accent/10 text-accent border border-accent/30 hover:bg-accent/20 transition-colors"
-                      >
-                        Stack Overflow
-                      </a>
-                      <a
-                        href={`https://github.com/search?type=issues&q=${encodeURIComponent(q)}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-[11px] font-medium px-2 py-1 rounded-md bg-secondary text-secondary-foreground border border-border hover:border-accent/50 transition-colors"
-                      >
-                        GitHub
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </Section>
-            </div>
-
-            {/* Fixes */}
-            <Section
-              icon={<Wrench className="size-4" />}
-              title="Suggested fixes"
-              accent="primary"
-            >
-              <div className="space-y-4">
-                {result.fixes.map((fix, i) => (
-                  <div
-                    key={i}
-                    className="rounded-lg border border-border bg-background/40 p-4"
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="size-5 rounded-md bg-primary/15 text-primary text-xs font-mono grid place-items-center border border-primary/30">
-                        {i + 1}
-                      </span>
-                      <h4 className="font-medium text-foreground">{fix.title}</h4>
-                    </div>
-                    <p className="text-sm text-foreground/85 leading-relaxed whitespace-pre-wrap">
-                      {fix.steps}
-                    </p>
-                    {fix.code && (
-                      <div className="relative mt-3 group">
-                        <pre className="font-mono text-xs bg-background border border-border rounded-md p-3 overflow-x-auto text-foreground/90">
-                          <code>{fix.code}</code>
-                        </pre>
-                        <button
-                          type="button"
-                          onClick={() => copy(`fix-${i}`, fix.code!)}
-                          className="absolute top-2 right-2 text-xs px-2 py-1 rounded bg-secondary/80 text-muted-foreground border border-border opacity-0 group-hover:opacity-100 transition-opacity hover:text-foreground"
-                        >
-                          {copied === `fix-${i}` ? "Copied" : "Copy"}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </Section>
+            )}
+            <ResultView result={mutation.data.result} />
           </div>
         )}
 
@@ -349,39 +254,5 @@ function Index() {
         </footer>
       </main>
     </div>
-  );
-}
-
-function Section({
-  icon,
-  title,
-  accent,
-  children,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  accent: "primary" | "accent" | "warning";
-  children: React.ReactNode;
-}) {
-  const colorMap = {
-    primary: "text-primary bg-primary/10 border-primary/30",
-    accent: "text-accent bg-accent/10 border-accent/30",
-    warning: "text-warning bg-warning/10 border-warning/30",
-  };
-  return (
-    <section className="rounded-2xl border border-border bg-card p-6">
-      <div className="flex items-center gap-2.5 mb-4">
-        <span
-          className={cn(
-            "size-7 rounded-md grid place-items-center border",
-            colorMap[accent],
-          )}
-        >
-          {icon}
-        </span>
-        <h3 className="font-semibold tracking-tight">{title}</h3>
-      </div>
-      {children}
-    </section>
   );
 }
