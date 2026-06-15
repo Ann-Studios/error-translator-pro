@@ -36,7 +36,6 @@ export const translateError = createServerFn({ method: "POST" })
       const { object } = await generateObject({
         model: gateway("google/gemini-3-flash-preview"),
         schema: ResultSchema,
-        mode: "json",
         system:
           "You are an expert developer who translates programming errors into clear, actionable guidance. Be concrete and pragmatic. Avoid generic filler. Tailor fixes to the actual error and stack trace, citing exact identifiers when shown. Always respond with valid JSON matching the requested schema exactly.",
         prompt: `Analyze this error and produce a structured explanation.
