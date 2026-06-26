@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trash2, ChevronRight, Inbox, Loader2 } from "lucide-react";
@@ -24,6 +24,9 @@ function HistoryPage() {
   const del = useServerFn(deleteTranslation);
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const isDetailRoute = useRouterState({
+    select: (state) => state.location.pathname !== "/history",
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ["translations"],
@@ -38,6 +41,10 @@ function HistoryPage() {
     },
     onError: (e) => toast.error((e as Error).message),
   });
+
+  if (isDetailRoute) {
+    return <Outlet />;
+  }
 
   return (
     <div className="min-h-screen">
