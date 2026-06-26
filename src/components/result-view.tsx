@@ -29,9 +29,7 @@ export function ResultView({ result }: { result: TranslationResult }) {
             <div className="text-xs font-mono text-accent uppercase tracking-wider mb-1.5">
               {result.likelyLanguage}
             </div>
-            <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">
-              {result.title}
-            </h2>
+            <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">{result.title}</h2>
           </div>
           <Button
             variant="ghost"

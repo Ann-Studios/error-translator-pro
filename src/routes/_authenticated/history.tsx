@@ -7,10 +7,7 @@ import { toast } from "sonner";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/ui/button";
-import {
-  listTranslations,
-  deleteTranslation,
-} from "@/lib/translations.functions";
+import { listTranslations, deleteTranslation } from "@/lib/translations.functions";
 
 export const Route = createFileRoute("/_authenticated/history")({
   head: () => ({
@@ -49,17 +46,13 @@ function HistoryPage() {
       <main className="mx-auto max-w-4xl px-6 py-10">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight">
-              Saved errors
-            </h1>
+            <h1 className="text-3xl font-semibold tracking-tight">Saved errors</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Every translation you run is saved here automatically.
             </p>
           </div>
 
-          <Button onClick={() => navigate({ to: "/" })}>
-            New translation
-          </Button>
+          <Button onClick={() => navigate({ to: "/" })}>New translation</Button>
         </div>
 
         {isLoading ? (
@@ -74,9 +67,7 @@ function HistoryPage() {
             <p className="mb-4 mt-1 text-sm text-muted-foreground">
               Translate your first error and it&apos;ll show up here.
             </p>
-            <Button onClick={() => navigate({ to: "/" })}>
-              Translate an error
-            </Button>
+            <Button onClick={() => navigate({ to: "/" })}>Translate an error</Button>
           </div>
         ) : (
           <ul className="space-y-2">
@@ -113,7 +104,7 @@ function HistoryPage() {
                       </p>
                     </div>
 
-                    <ChevronRight className="size-4 flex-shrink-0 text-muted-foreground transition-colors group-hover:text-accent" />
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-accent" />
                   </Link>
 
                   <button

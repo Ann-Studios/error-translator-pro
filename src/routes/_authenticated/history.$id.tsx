@@ -37,9 +37,7 @@ function DetailPage() {
             <Loader2 className="size-4 animate-spin" /> Loading…
           </div>
         )}
-        {error && (
-          <div className="text-sm text-destructive">{(error as Error).message}</div>
-        )}
+        {error && <div className="text-sm text-destructive">{(error as Error).message}</div>}
         {data && (
           <>
             <div className="text-xs text-muted-foreground mb-4">

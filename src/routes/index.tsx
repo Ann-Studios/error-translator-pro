@@ -2,13 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import {
-  AlertCircle,
-  Sparkles,
-  Loader2,
-  Bookmark,
-  ArrowRight,
-} from "lucide-react";
+import { AlertCircle, Sparkles, Loader2, Bookmark, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppHeader } from "@/components/app-header";
@@ -31,8 +25,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Error Translator for Developers" },
       {
         property: "og:description",
-        content:
-          "Turn cryptic errors into clear explanations, root causes, and fixes — instantly.",
+        content: "Turn cryptic errors into clear explanations, root causes, and fixes — instantly.",
       },
     ],
   }),
@@ -124,8 +117,8 @@ function Index() {
             Make any error <span className="text-gradient">make sense</span>.
           </h1>
           <p className="mt-5 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-            Paste a stack trace, compiler error, or cryptic log line. Get a plain-English
-            breakdown, likely causes, concrete fixes, and curated searches.
+            Paste a stack trace, compiler error, or cryptic log line. Get a plain-English breakdown,
+            likely causes, concrete fixes, and curated searches.
             {isAuthed ? (
               <span className="block mt-1.5 text-success text-sm">
                 <Bookmark className="inline size-3.5 mr-1" />

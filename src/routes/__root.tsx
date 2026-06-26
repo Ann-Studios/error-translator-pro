@@ -127,7 +127,8 @@ function RootComponent() {
         router.invalidate();
         if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
       });
-      (window as unknown as { __authSub?: { unsubscribe: () => void } }).__authSub = data.subscription;
+      (window as unknown as { __authSub?: { unsubscribe: () => void } }).__authSub =
+        data.subscription;
     });
     return () => {
       mounted = false;

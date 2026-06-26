@@ -8,13 +8,16 @@ export const lovable = {
   auth: {
     signInWithOAuth: async (
       provider: "google" | "apple" | "microsoft" | "lovable",
-      opts?: SignInOptions) => {
+      opts?: SignInOptions,
+    ) => {
       if (provider === "lovable") {
         return { error: new Error("Lovable auth is not available on Vercel.") };
       }
 
+      const supabaseProvider = provider === "microsoft" ? "azure" : provider;
+
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider,
+        provider: supabaseProvider,
         options: {
           redirectTo: opts?.redirect_uri ?? `${window.location.origin}/auth`,
           queryParams: opts?.extraParams,

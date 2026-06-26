@@ -44,9 +44,9 @@
   /* Dark terminal-inspired palette */
   --background: oklch(0.16 0.015 250);
   --foreground: oklch(0.96 0.005 250);
-  --card: oklch(0.20 0.018 250);
+  --card: oklch(0.2 0.018 250);
   --card-foreground: oklch(0.96 0.005 250);
-  --popover: oklch(0.20 0.018 250);
+  --popover: oklch(0.2 0.018 250);
   --popover-foreground: oklch(0.96 0.005 250);
 
   --primary: oklch(0.82 0.18 145); /* terminal green */
@@ -65,12 +65,12 @@
   --destructive-foreground: oklch(0.98 0.01 25);
 
   --warning: oklch(0.82 0.16 75);
-  --warning-foreground: oklch(0.20 0.04 75);
+  --warning-foreground: oklch(0.2 0.04 75);
 
   --success: oklch(0.78 0.17 150);
   --success-foreground: oklch(0.16 0.04 150);
 
-  --border: oklch(0.30 0.02 250);
+  --border: oklch(0.3 0.02 250);
   --input: oklch(0.24 0.018 250);
   --ring: oklch(0.78 0.16 220);
 }
@@ -84,7 +84,8 @@
   * {
     border-color: var(--color-border);
   }
-  html, body {
+  html,
+  body {
     font-family: var(--font-sans);
   }
   body {
@@ -92,10 +93,12 @@
     color: var(--color-foreground);
     background-image:
       radial-gradient(ellipse 80% 50% at 50% -20%, oklch(0.78 0.16 220 / 0.15), transparent 70%),
-      radial-gradient(ellipse 60% 40% at 100% 100%, oklch(0.82 0.18 145 / 0.10), transparent 70%);
+      radial-gradient(ellipse 60% 40% at 100% 100%, oklch(0.82 0.18 145 / 0.1), transparent 70%);
     background-attachment: fixed;
   }
-  code, pre, .font-mono {
+  code,
+  pre,
+  .font-mono {
     font-family: var(--font-mono);
   }
 }

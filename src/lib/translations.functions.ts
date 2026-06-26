@@ -29,7 +29,6 @@ export const saveTranslation = createServerFn({ method: "POST" })
     return { id: row.id };
   });
 
-
 export const listTranslations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -60,10 +59,7 @@ export const deleteTranslation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ context, data }) => {
-    const { error } = await context.supabase
-      .from("translations")
-      .delete()
-      .eq("id", data.id);
+    const { error } = await context.supabase.from("translations").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
